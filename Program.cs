@@ -18,7 +18,7 @@ builder.Services.AddSwaggerGen();
 
 var influxDbOptions = new InfluxServiceOptions()
 {
-    Token = builder.Configuration.GetValue(typeof(string),"InfluxDb:Token").ToString(),
+    Token = Environment.GetEnvironmentVariable("InfluxKey"),
     Url = builder.Configuration.GetValue(typeof(string),"InfluxDb:Url").ToString()
 };
 

@@ -7,6 +7,8 @@
  #docker image push 192.168.1.136:9005/lake_stats_api:latest
 
 FROM mcr.microsoft.com/dotnet/aspnet:7.0 AS base
+ARG INFLUX_KEY_ARG
+ENV InfluxKey = $INFLUX_KEY_ARG
 WORKDIR /app
 EXPOSE 80
 EXPOSE 443
