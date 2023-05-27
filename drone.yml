@@ -9,11 +9,11 @@ steps:
   - echo hello world API
 - name: docker build
   image: plugins/docker
-  environment:
+  settings:
+    repo: 192.168.1.136:9005/lake_stats_api
+    tags: latest
+    #secret: id=mysecret,src=secret-file
     influxKey:
-        from_secret: influxKey
-  commands:
-  - docker build -t lake_stats_api --build-arg INFLUX_KEY_ARG=$influxKey .
-  - docker image tag lake_stats_api 192.168.1.136:9005/lake_stats_api:latest
-  - docker image push 192.168.1.136:9005/lake_stats_api:latest
-  
+      from_secret: influxKey
+    password:
+      from_secret: docker_password
