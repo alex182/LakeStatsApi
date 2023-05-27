@@ -8,7 +8,7 @@ steps:
   commands:
   - echo hello world API
 - name: docker build
-  image: alpine
+  image: plugins/docker
   environment:
     influxKey:
         from_secret: influxKey
