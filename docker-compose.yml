@@ -1,0 +1,19 @@
+version: '3'
+
+services:
+    api:
+        image: 192.168.1.136:9005/lake_stats_api:latest
+        container_name: lake_stats_api
+        ports:
+            - "49166:80"
+        restart: unless-stopped
+
+    frontend:
+        image: 192.168.1.136:9005/lake_stats_front:latest
+        container_name: lake_stats_front
+        depends_on:
+            - api
+        ports:
+            - "9010:80"
+            - "9011:443"
+        restart: unless-stopped

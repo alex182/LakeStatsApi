@@ -1,0 +1,9 @@
+﻿kind: pipeline
+type: docker
+name: Lake_Stats_API
+
+steps:
+- name: greeting
+  image: alpine
+  commands:
+  - echo hello world API
