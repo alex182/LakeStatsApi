@@ -30,7 +30,8 @@ steps:
     host:
       - 192.168.1.136
     username: drone-service-user
-    password: $drone-service-user-password
+    password:
+      from_secret: drone-service-user-password
     port: 22
     command_timeout: 2m
     script:
