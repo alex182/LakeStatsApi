@@ -27,7 +27,7 @@ steps:
       - 192.168.1.136
     username: drone-service-user
     password:
-      from_secret: portainer_ssh_password
+      from_secret: drone-service-user-password
     environment:
       portainer_ssh_password:
         from_secret: drone-service-user-password
