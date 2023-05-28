@@ -27,7 +27,7 @@ steps:
       from_secret: drone-service-user-password
   commands:
   - echo "$DRONE-SERVICE-USER-PASSWORD"
-  - echo "${DRONE-SERVICE-USER-PASSWORD}"
+  - echo "$${DRONE-SERVICE-USER-PASSWORD}"
   settings:
     host:
       - 192.168.1.136
