@@ -20,14 +20,23 @@ steps:
 #    insecure: true 
 #    build_args_from_env:
 #    - INFLUX_KEY
-- name: deploy
-  image: alpine
+
+- name: ssh-docker-host
+  image: appleboy/drone-ssh
   environment:
-    DRONE-SERVICE-USER-PASSWORD:
+    USERNAME:
+      from_secret: MAC_USER
+  settings:
+    host: 192.168.1.136
+    port: 22
+    username: drone-service-user
+    password: 
       from_secret: drone-service-user-password
-  commands:
-  - echo "$DRONE-SERVICE-USER-PASSWORD"
-  - echo "$${DRONE-SERVICE-USER-PASSWORD}"
+    envs: [ USERNAME ]
+    script:
+    - echo $USERNAME
+    - echo $${USERNAME}
+
   #settings:
   #  host:
   #    - 192.168.1.136
