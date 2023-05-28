@@ -19,3 +19,4 @@ steps:
     secrets:
       - source: influxKey
         target: INFLUX_KEY_ARG
+    build_args_from_env: INFLUX_KEY_ARG
