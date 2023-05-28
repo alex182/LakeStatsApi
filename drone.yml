@@ -16,8 +16,7 @@ steps:
     registry: 192.168.1.136:9005
     tags: latest
     insecure: true
+    build_args_from_env:
+        - influxKey
     build_args:
         - INFLUX_KEY_ARG=$influxKey
-    #secret: id=mysecret,src=secret-file
-    influxKey:
-      from_secret: influxKey
