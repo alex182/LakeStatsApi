@@ -18,5 +18,4 @@ steps:
     insecure: true
     secrets:
       - source: docker-build-args
-        target: pipeline-build-args
-    build_args_from_env: $pipeline-build-args
+        target: InfluxKey
