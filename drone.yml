@@ -24,7 +24,7 @@ steps:
 - name: ssh-docker-host
   image: appleboy/drone-ssh
   environment:
-    UserPass:
+    USERPASS:
       from_secret: drone-service-user-pass
   settings:
     host: 192.168.1.136
@@ -32,10 +32,10 @@ steps:
     username: drone-service-user
     password: 
       from_secret: drone-service-user-password
-    envs: [ UserPass ]
+    envs: [ USERPASS ]
     script:
-    - echo $UserPass
-    - echo $${UserPass}
+    - echo $USERPASS
+    - echo $${USERPASS}
 
   #settings:
   #  host:
