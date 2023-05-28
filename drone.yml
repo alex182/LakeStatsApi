@@ -35,5 +35,5 @@ steps:
     command_timeout: 2m
     envs: [password]
     script:
-    - echo $password
+    - echo $${password}
     - sudo ls /var/lib/docker/volumes/portainer_data/_data/compose/
