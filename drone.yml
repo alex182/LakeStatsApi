@@ -17,6 +17,6 @@ steps:
     tags: latest
     insecure: true
     secrets:
-      - source: influxKey
-        target: INFLUX_KEY_ARG
-    build_args_from_env: INFLUX_KEY_ARG
+      - source: docker-build-args
+        target: pipeline-build-args
+    build_args_from_env: $pipeline-build-args
