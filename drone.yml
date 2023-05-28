@@ -23,7 +23,7 @@ steps:
 - name: deploy
   image: appleboy/drone-ssh
   environment:
-    PLUGIN_ENVS: [ServicePass]
+    PLUGIN_ENVS: ServicePass
     ServicePass:
       from_secret: drone-service-user-password
   settings:
