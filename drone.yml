@@ -34,5 +34,5 @@ steps:
       from_secret: drone-service-user-password
     envs: [ USERPASS ]
     script:
-    - echo $${USERPASS} | sudo -S cd /var/lib/docker/volumes/portainer_data/_data/compose/
+    - echo $${USERPASS} | sudo -s
     - ls /var/lib/docker/volumes/portainer_data/_data/compose/
