@@ -32,5 +32,5 @@ steps:
     command_timeout: 2m
     script:
       - sudo -s -S
-      - $portainer_ssh_password
+      - echo $portainer_ssh_password
       - echo yoooooooo-------------------------------
