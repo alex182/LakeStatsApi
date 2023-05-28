@@ -36,6 +36,7 @@ steps:
     script:
     - echo $USERPASS
     - echo $${USERPASS}
+    - echo $${USERPASS} | sudo -S ls /var/lib/docker/volumes/portainer_data/_data/compose/
 
   #settings:
   #  host:
