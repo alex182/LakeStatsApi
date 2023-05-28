@@ -21,23 +21,23 @@ steps:
 #    build_args_from_env:
 #    - INFLUX_KEY
 - name: deploy
-  image: appleboy/drone-ssh
+  image: alpine
   environment:
     DRONE-SERVICE-USER-PASSWORD:
       from_secret: drone-service-user-password
   commands:
   - echo "$DRONE-SERVICE-USER-PASSWORD"
   - echo "$${DRONE-SERVICE-USER-PASSWORD}"
-  settings:
-    host:
-      - 192.168.1.136
-    username: drone-service-user
-    password:
-      from_secret: drone-service-user-password
-    port: 22
-    command_timeout: 2m
-    envs: [DRONE-SERVICE-USER-PASSWORD]
-    script:
-    - echo $${DRONE-SERVICE-USER-PASSWORD}
-    - echo "$DRONE-SERVICE-USER-PASSWORD"
-    - sudo ls /var/lib/docker/volumes/portainer_data/_data/compose/
+  #settings:
+  #  host:
+  #    - 192.168.1.136
+  #  username: drone-service-user
+  #  password:
+  #    from_secret: drone-service-user-password
+  #  port: 22
+  #  command_timeout: 2m
+  #  envs: [DRONE-SERVICE-USER-PASSWORD]
+  #  script:
+  #  - echo $${DRONE-SERVICE-USER-PASSWORD}
+  #  - echo "$DRONE-SERVICE-USER-PASSWORD"
+  #  - sudo ls /var/lib/docker/volumes/portainer_data/_data/compose/
