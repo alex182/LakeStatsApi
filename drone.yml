@@ -23,7 +23,6 @@ steps:
 - name: deploy
   image: appleboy/drone-ssh
   environment:
-    PLUGIN_ENVS: DRONE-SERVICE-USER-PASSWORD
     DRONE-SERVICE-USER-PASSWORD:
       from_secret: drone-service-user-password
   settings:
