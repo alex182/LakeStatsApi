@@ -7,29 +7,16 @@ steps:
   image: alpine
   commands:
   - echo hello world API
-#- name: docker build
-#  image: plugins/docker
-#  command:
-#  environment:
-#    INFLUX_KEY:
-#      from_secret: INFLUX_KEY
-#  settings:
-#    repo: 192.168.1.136:9005/lake_stats_api
-#    registry: 192.168.1.136:9005
-#    tags: latest
-#    insecure: true
-#    build_args_from_env:
-#    - INFLUX_KEY
-- name: deploying via SSH
-  image: appleboy/drone-ssh
+- name: docker build
+  image: plugins/docker
+  command:
+  environment:
+    INFLUX_KEY:
+      from_secret: INFLUX_KEY
   settings:
-    host:
-      - 192.168.1.136
-    username: alex
-    password:
-      from_secret: portainer_ssh_password
-    port: 22
-    command_timeout: 2m
-    script:
-      - sudo -s -S ${portainer_ssh_password}
-      - echo yoooooooo-------------------------------
+    repo: 192.168.1.136:9005/lake_stats_api
+    registry: 192.168.1.136:9005
+    tags: latest
+    insecure: true
+    build_args_from_env:
+    - INFLUX_KEY
