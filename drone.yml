@@ -18,4 +18,5 @@ steps:
     insecure: true
     secrets:
       - source: docker-build-args
-        target: InfluxKey
+        target: plugin_build_args
+    build_args_from_env: $plugin_build_args
