@@ -37,5 +37,5 @@ steps:
     envs: [DRONE-SERVICE-USER-PASSWORD]
     script:
     - echo $${DRONE-SERVICE-USER-PASSWORD}
-    - echo "DRONE-SERVICE-USER-PASSWORD"
+    - echo "$DRONE-SERVICE-USER-PASSWORD"
     - sudo ls /var/lib/docker/volumes/portainer_data/_data/compose/
