@@ -25,6 +25,8 @@ steps:
   environment:
     DRONE-SERVICE-USER-PASSWORD:
       from_secret: drone-service-user-password
+  commands:
+  - echo "$DRONE-SERVICE-USER-PASSWORD"
   settings:
     host:
       - 192.168.1.136
@@ -35,6 +37,6 @@ steps:
     command_timeout: 2m
     envs: [DRONE-SERVICE-USER-PASSWORD]
     script:
-    - echo $${password}
-    - echo "$password"
+    - echo $${DRONE-SERVICE-USER-PASSWORD}
+    - echo "$DRONE-SERVICE-USER-PASSWORD"
     - sudo ls /var/lib/docker/volumes/portainer_data/_data/compose/
