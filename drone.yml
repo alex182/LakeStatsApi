@@ -15,5 +15,9 @@ steps:
     registry: 192.168.1.136:9005
     tags: latest
     insecure: true
-    build_args_from_env: [INFLUX_KEY]
-    secrets: [INFLUX_KEY]
+  environment:
+    INFLUX_KEY:
+      from_secret: INFLUX_KEY
+    settings:
+    build_args_from_env:
+    - INFLUX_KEY
