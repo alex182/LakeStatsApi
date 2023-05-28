@@ -10,13 +10,10 @@ steps:
 - name: docker build
   image: plugins/docker
   command:
-    #- echo {"insecure-registries" : [ "192.168.1.136:5000" ]} > your/file.txt
   settings:
     repo: 192.168.1.136:9005/lake_stats_api
     registry: 192.168.1.136:9005
     tags: latest
     insecure: true
-    secrets:
-      - source: docker-build-args
-        target: plugin_build_args
-    build_args_from_env: $plugin_build_args
+    build_args_from_env: [INFLUX_KEY]
+    secrets: [INFLUX_KEY]
