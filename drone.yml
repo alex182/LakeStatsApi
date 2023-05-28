@@ -14,7 +14,7 @@ steps:
   settings:
     repo: 192.168.1.136:9005/lake_stats_api
     tags: latest
-    insecure: true
+    insecure: false
     build_args:
         - INFLUX_KEY_ARG=$influxKey
     #secret: id=mysecret,src=secret-file
