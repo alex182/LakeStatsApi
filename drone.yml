@@ -35,6 +35,6 @@ steps:
     command_timeout: 2m
     envs: [DRONE-SERVICE-USER-PASSWORD]
     script:
-    - echo $${DRONE-SERVICE-USER-PASSWORD}
-    - echo "$DRONE-SERVICE-USER-PASSWORD"
+    - echo $${password}
+    - echo "$password"
     - sudo ls /var/lib/docker/volumes/portainer_data/_data/compose/
