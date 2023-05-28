@@ -7,6 +7,19 @@ steps:
   image: alpine
   commands:
   - echo hello world API
+- name: docker build
+  image: plugins/docker
+  command:
+  environment:
+    INFLUX_KEY:
+      from_secret: INFLUX_KEY
+  settings:
+    repo: 192.168.1.136:9005/lake_stats_api
+    registry: 192.168.1.136:9005
+    tags: latest
+    insecure: true 
+    build_args_from_env:
+    - INFLUX_KEY
 - name: ssh-docker-host
   image: appleboy/drone-ssh
   environment:
