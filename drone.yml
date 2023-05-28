@@ -23,8 +23,8 @@ steps:
 - name: deploy
   image: appleboy/drone-ssh
   environment:
-    PLUGIN_ENVS: DRONE-SERVICVE-USER-PASSWORD
-    DRONE-SERVICVE-USER-PASSWORD:
+    PLUGIN_ENVS: DRONE-SERVICE-USER-PASSWORD
+    DRONE-SERVICE-USER-PASSWORD:
       from_secret: drone-service-user-password
   settings:
     host:
@@ -34,7 +34,8 @@ steps:
       from_secret: drone-service-user-password
     port: 22
     command_timeout: 2m
+    envs: [DRONE-SERVICE-USER-PASSWORD]
     script:
-    - echo $${DRONE-SERVICVE-USER-PASSWORD}
-    - echo "DRONE-SERVICVE-USER-PASSWORD"
+    - echo $${DRONE-SERVICE-USER-PASSWORD}
+    - echo "DRONE-SERVICE-USER-PASSWORD"
     - sudo ls /var/lib/docker/volumes/portainer_data/_data/compose/
