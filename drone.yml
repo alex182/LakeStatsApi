@@ -17,7 +17,7 @@ steps:
 #    repo: 192.168.1.136:9005/lake_stats_api
 #    registry: 192.168.1.136:9005
 #    tags: latest
-#    insecure: true
+#    insecure: true 
 #    build_args_from_env:
 #    - INFLUX_KEY
 - name: deploy
@@ -34,5 +34,5 @@ steps:
     port: 22
     command_timeout: 2m
     script:
-    - echo ${portainer_ssh_password}
-      - sudo ls /var/lib/docker/volumes/portainer_data/_data/compose/
+    - echo ${portainer_ssh_password} ---------
+    - sudo ls /var/lib/docker/volumes/portainer_data/_data/compose/
