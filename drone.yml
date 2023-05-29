@@ -45,4 +45,4 @@ trigger:
   event:
    - pull_request
   action:
-   - merged
+   - merge
