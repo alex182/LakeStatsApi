@@ -38,3 +38,9 @@ steps:
     - echo $${USERPASS} | sudo -S docker stop lake_stats_api
     - echo $${USERPASS} | sudo -S docker rm lake_stats_api
     - echo $${USERPASS} | sudo -S docker-compose -f /var/lib/docker/volumes/portainer_data/_data/compose/109/docker-compose.yml up --detach
+
+trigger:
+  branch:
+  - master
+  event:
+   - merge
