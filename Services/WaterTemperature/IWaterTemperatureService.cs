@@ -4,6 +4,7 @@ namespace LakeStatsApi.Services.WaterTemperature
 {
     public interface IWaterTemperatureService
     {
-        Task<GetWaterTemperatureResponse> GetWaterTemperature(GetWaterTemperatureRequest request);
+        Task<GetWaterTemperatureResponse> GetWaterTemperatureReading(GetWaterTemperatureRequest request);
+        Task<GetWaterTemperatureSignalStrengthResponse> WaterTemperatureProbeSignalStrength(GetWaterTemperatureSignalStrengthRequest request);
     }
 }

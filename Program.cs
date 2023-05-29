@@ -63,7 +63,7 @@ var app = builder.Build();
 app.UseSwagger();
 app.UseSwaggerUI();
 
-app.MapGet("/WaterTemperature/{locationId}/{take?}", async(string locationId,
+app.MapGet("/WaterTemperatureProbe/Readings/{deviceId}/{take?}", async(string deviceId,
     ILoggerFactory loggerFactory, IWaterTemperatureService waterTemperatureService, int? take) =>
 {
     take = take ?? 50;
@@ -71,16 +71,16 @@ app.MapGet("/WaterTemperature/{locationId}/{take?}", async(string locationId,
     var correlationId = Guid.NewGuid().ToString();
     var logger = loggerFactory.CreateLogger("WaterTemperature");
 
-    using (logger.BeginScope("Retrieving WaterTemperature for Location {locationId} CorrelationId {correlationId}", locationId, correlationId))
+    using (logger.BeginScope("/WaterTemperatureProbe/Readings/ {deviceId} CorrelationId {correlationId}", deviceId, correlationId))
     {
         var request = new GetWaterTemperatureRequest()
         {
             CorrelationId = correlationId,
-            LocationId = locationId,
+            LocationId = deviceId,
             Take = take.Value
         };
 
-        var waterTemp = await waterTemperatureService.GetWaterTemperature(request);
+        var waterTemp = await waterTemperatureService.GetWaterTemperatureReading(request);
         return waterTemp;
     };
 
@@ -88,6 +88,36 @@ app.MapGet("/WaterTemperature/{locationId}/{take?}", async(string locationId,
 {
     var parameter = generatedOperation.Parameters[0];
     parameter.Description = "The location Id of where to return water temperature for";
+    return generatedOperation;
+});
+
+app.MapGet("/WaterTemperatureProbe/Signal/{locationId}/{take?}/{minutes?}", async(string locationId,
+    ILoggerFactory loggerFactory, IWaterTemperatureService waterTemperatureService, int? take,int? minutes) =>
+{
+    take = take ?? 50;
+    minutes = minutes ?? 50;
+
+    var correlationId = Guid.NewGuid().ToString();
+    var logger = loggerFactory.CreateLogger("WaterTemperature");
+
+    using (logger.BeginScope("/WaterTemperatureProbe/Status/ {locationId} CorrelationId {correlationId}", locationId, correlationId))
+    {
+        var request = new GetWaterTemperatureSignalStrengthRequest()
+        {
+            CorrelationId = correlationId,
+            LocationId = locationId,
+            Minutes = minutes.Value,
+            Take = take.Value
+        };
+
+        var probeStatus = await waterTemperatureService.WaterTemperatureProbeSignalStrength(request);
+        return probeStatus;
+    };
+
+}).WithOpenApi(generatedOperation =>
+{
+    var parameter = generatedOperation.Parameters[0];
+    parameter.Description = "The location Id of the probe to return status for";
     return generatedOperation;
 });
 
