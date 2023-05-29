@@ -42,3 +42,5 @@ steps:
 trigger:
   branch:
   - master
+  event:
+   - merge
