@@ -43,4 +43,6 @@ trigger:
   branch:
   - master
   event:
-   - merge
+   - pull_request
+  action:
+   - merged
