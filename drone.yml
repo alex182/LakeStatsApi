@@ -44,5 +44,5 @@ trigger:
   - master
   event:
    - pull_request
-  action:
-   - Merged
+  status:
+   - success
