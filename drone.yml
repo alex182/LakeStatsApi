@@ -24,7 +24,7 @@ steps:
   image: appleboy/drone-ssh
   environment:
     USERPASS:
-      from_secret: drone-service-user-pass
+      from_secret: drone-service-user-password
   settings:
     host: 192.168.1.136
     port: 22
