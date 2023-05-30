@@ -91,11 +91,10 @@ app.MapGet("/WaterTemperatureProbe/Readings/{deviceId}/{take?}", async(string de
     return generatedOperation;
 });
 
-app.MapGet("/WaterTemperatureProbe/Signal/{locationId}/{take?}/{minutes?}", async(string locationId,
-    ILoggerFactory loggerFactory, IWaterTemperatureService waterTemperatureService, int? take,int? minutes) =>
+app.MapGet("/WaterTemperatureProbe/Signal/{locationId}/{minutes?}", async(string locationId,
+    ILoggerFactory loggerFactory, IWaterTemperatureService waterTemperatureService, int? minutes) =>
 {
-    take = take ?? 50;
-    minutes = minutes ?? 50;
+    minutes = minutes ?? 0;
 
     var correlationId = Guid.NewGuid().ToString();
     var logger = loggerFactory.CreateLogger("WaterTemperature");
@@ -107,7 +106,6 @@ app.MapGet("/WaterTemperatureProbe/Signal/{locationId}/{take?}/{minutes?}", asyn
             CorrelationId = correlationId,
             LocationId = locationId,
             Minutes = minutes.Value,
-            Take = take.Value
         };
 
         var probeStatus = await waterTemperatureService.WaterTemperatureProbeSignalStrength(request);
