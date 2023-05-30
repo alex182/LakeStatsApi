@@ -55,15 +55,14 @@ namespace LakeStatsApi.Services.WaterTemperature
             {
                 CorrelationId = request.CorrelationId,
             };
+
             var results = await _influxDBService.QueryAsync(async query =>
             {
-                var flux = $"from(bucket: \"dock\")\r\n  |> range(start: 0)\r\n  " +
+                var flux = $"from(bucket: \"dock\")\r\n  |> range(start: -{request.Minutes}m)\r\n  " +
                 $"|> filter(fn: (r) => r[\"_measurement\"] == \"device_uplink\")\r\n  " +
                 $"|> filter(fn: (r) => r[\"_field\"] == \"rssi\")\r\n  " +
-                $"|> filter(fn: (r) => r[\"application_name\"] == \"Dock\")\r\n  " +
                 $"|> filter(fn: (r) => r[\"dev_eui\"] == \"{request.LocationId}\")\r\n  " +
-                $"|> sort(columns:[\"_time\"],desc:true)"+
-                $"|> yield(name: \"last\")";
+                $"|> sort(columns:[\"_time\"],desc:true)";
                 var tables = await query.QueryAsync(flux, "7ee4d7f6e9f7c11e");
                 return tables.SelectMany(t =>
                     t.Records.OrderByDescending(r => r.GetValueByKey("_time").ToString()).Select(r => new GetWaterTemperatureSignalStrengthResult()
