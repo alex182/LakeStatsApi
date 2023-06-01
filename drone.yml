@@ -6,7 +6,7 @@ steps:
 - name: greeting
   image: alpine
   commands:
-  - echo hello world API
+  - echo hello world API!
 - name: docker build
   image: plugins/docker
   command:
