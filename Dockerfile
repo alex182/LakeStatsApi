@@ -1,7 +1,7 @@
 #See https://aka.ms/containerfastmode to understand how Visual Studio uses this Dockerfile to build your images for faster debugging.
 
 
-#Build/Push to registry
+# Build/Push to registry
  #docker build -t lake_stats_api .
  #docker image tag lake_stats_api 192.168.1.136:9005/lake_stats_api:latest
  #docker image push 192.168.1.136:9005/lake_stats_api:latest 
