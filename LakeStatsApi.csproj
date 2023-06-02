@@ -18,7 +18,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include=".woodpecker\.deploy.yml" />
     <None Include=".woodpecker\.build.yml" />
   </ItemGroup>
 
