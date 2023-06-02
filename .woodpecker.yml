@@ -1,48 +1,11 @@
-﻿kind: pipeline
-type: docker
-name: Lake_Stats_API
-
-steps:
-- name: greeting
-  image: alpine
-  commands:
-  - echo hello world API!
-- name: docker build
-  image: plugins/docker
-  command:
-  environment:
-    INFLUX_KEY:
-      from_secret: INFLUX_KEY
-  settings:
-    repo: 192.168.1.136:9005/lake_stats_api
-    registry: 192.168.1.136:9005
-    tags: latest
-    insecure: true 
-    build_args_from_env:
-    - INFLUX_KEY
-- name: ssh-docker-host
-  image: appleboy/drone-ssh
-  environment:
-    USERPASS:
-      from_secret: drone-service-user-password
-  settings:
-    host: 192.168.1.136
-    port: 22
-    username: drone-service-user
-    password: 
-      from_secret: drone-service-user-password
-    envs: [ USERPASS ]
-    script:
-    - echo $${USERPASS} | sudo -S ls /var/lib/docker/volumes/portainer_data/_data/compose/
-    - echo $${USERPASS} | sudo -S docker-compose -f /var/lib/docker/volumes/portainer_data/_data/compose/109/docker-compose.yml pull
-    - echo $${USERPASS} | sudo -S docker stop lake_stats_api
-    - echo $${USERPASS} | sudo -S docker rm lake_stats_api
-    - echo $${USERPASS} | sudo -S docker-compose -f /var/lib/docker/volumes/portainer_data/_data/compose/109/docker-compose.yml up --detach
-
-#trigger:
-#  branch:
-#  - master
-#  event:
-#   - pull_request
-#  status:
-#   - success
+﻿pipeline: 
+    publish:
+        image: woodpeckerci/plugin-docker-buildx
+        settings:
+          platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm64/v8,linux/ppc64le,linux/riscv64,linux/s390x
+          repo: 192.168.1.136:9005/lake_stats_api
+          registry: 192.168.1.136:9005
+          tags: latest
+          insecure: true
+          build_args_from_env:
+            - INFLUX_KEY
