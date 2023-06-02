@@ -2,7 +2,7 @@
 
 
 #Build/Push to registry
- #docker build -t lake_stats_api . 
+ #docker build -t lake_stats_api .  
  #docker image tag lake_stats_api 192.168.1.136:9005/lake_stats_api:latest
  #docker image push 192.168.1.136:9005/lake_stats_api:latest 
 
