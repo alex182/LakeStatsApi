@@ -4,7 +4,7 @@
         settings:
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm64/v8,linux/ppc64le,linux/riscv64,linux/s390x
           repo: 192.168.1.136:9005/lake_stats_api
-          registry: 192.168.1.136:9005
+          registry: 192.168.1.136
           tags: latest
           insecure: true
           build_args_from_env:
