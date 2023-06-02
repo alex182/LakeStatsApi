@@ -5,6 +5,7 @@
           repo: 192.168.1.136:9005/lake_stats_api
           registry: 192.168.1.136
           tags: latest
-          insecure: true
-          build_args_from_env:
-            - INFLUX_KEY
+          advanced:
+              insecure: true
+              build_args_from_env:
+                - INFLUX_KEY
