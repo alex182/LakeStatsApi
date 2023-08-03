@@ -18,6 +18,7 @@ steps:
     - INFLUX_KEY
 - name: ssh-docker-host
   image: appleboy/drone-ssh
+  secrets: [ drone-service-user-password ]
   environment:
     USERPASS:
       from_secret: drone-service-user-password
