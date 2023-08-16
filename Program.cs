@@ -91,7 +91,7 @@ app.MapGet("/WaterTemperatureProbe/Readings/{deviceId}/{take?}", async(string de
     return generatedOperation;
 });
 
-app.MapGet("/WaterTemperatureProbe/Signal/{locationId}/{minutes?}", async(string locationId,
+app.MapGet("/WaterTemperatureProbe/Signal/{locationId}/{minutes?}", async (string locationId,
     ILoggerFactory loggerFactory, IWaterTemperatureService waterTemperatureService, int? minutes) =>
 {
     minutes = minutes ?? 0;
@@ -118,5 +118,23 @@ app.MapGet("/WaterTemperatureProbe/Signal/{locationId}/{minutes?}", async(string
     parameter.Description = "The location Id of the probe to return status for";
     return generatedOperation;
 });
+
+
+//yes its a GET request for ingesting information....its the Wunderground standard that the device writing to this endpoint uses
+app.MapGet("/Wunderground/Ingest", async (
+    ILoggerFactory loggerFactory) =>
+{
+
+    var correlationId = Guid.NewGuid().ToString();
+    var logger = loggerFactory.CreateLogger("Wunderground-Ingest");
+
+})
+.WithName("WundergroundIngest");
+//.WithOpenApi(generatedOperation =>
+//{
+//    var parameter = generatedOperation.Parameters[0];
+//    parameter.Description = "The location Id of the probe to return status for";
+//    return generatedOperation;
+//});
 
 app.Run();
