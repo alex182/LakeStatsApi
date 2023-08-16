@@ -23,7 +23,6 @@ namespace Keycloak.Test
             _client = new KeycloakClient(logger, httpClient, options);
         }
 
-
         [TestMethod]
         public async Task KeycloakClient_Should_ReturnToken()
         {
