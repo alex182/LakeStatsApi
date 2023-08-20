@@ -10,11 +10,19 @@ using InfluxDB.Client;
 using LakeStatsApi.Services.WaterTemperature;
 using LakeStatsApi.Services.Influx;
 using LakeStatsApi.Services.WaterTemperature.Models;
+using Keycloak.Client.Models;
+using Keycloak.Client;
+using LakeStatsApi.Attributes;
+using Microsoft.AspNetCore.Authorization;
+using RestSharp.Authenticators;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+builder.Services.AddHttpClient();
+builder.Services.AddHttpContextAccessor();
+
 
 var influxDbOptions = new InfluxServiceOptions()
 {
@@ -22,8 +30,9 @@ var influxDbOptions = new InfluxServiceOptions()
     Url = builder.Configuration.GetValue(typeof(string),"InfluxDb:Url").ToString()
 };
 
-var useLokiLogging = builder.Configuration["UseLokiLogging"];
+var keylcoakClientOptions = new KeycloakOptions();
 
+var useLokiLogging = builder.Configuration["UseLokiLogging"];
 
 if (useLokiLogging == "True")
 {
@@ -55,8 +64,20 @@ if (useLokiLogging == "True")
 var influxDbClient = InfluxDBClientFactory.Create(influxDbOptions.Url, influxDbOptions.Token);
 
 builder.Services.AddSingleton<InfluxDBClient>(p => influxDbClient); 
+builder.Services.AddSingleton<KeycloakOptions>(p => keylcoakClientOptions); 
+builder.Services.AddSingleton<IKeycloakClient,KeycloakClient>(); 
 builder.Services.AddTransient<IInfluxDBService, InfluxDBService>(); 
-builder.Services.AddTransient<IWaterTemperatureService, WaterTemperatureService>(); 
+builder.Services.AddTransient<IWaterTemperatureService, WaterTemperatureService>();
+
+builder.Services.AddAuthentication().AddJwtBearer();
+
+builder.Services.AddAuthorization(o =>
+{
+    o.AddPolicy("LakeFrontApi-Write", p => p.AddRequirements(new HasScopeRequirement(new List<string>() { "lakefrontapi-write" })));
+});
+
+builder.Services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
+
 
 var app = builder.Build();
 
@@ -91,7 +112,7 @@ app.MapGet("/WaterTemperatureProbe/Readings/{deviceId}/{take?}", async(string de
     return generatedOperation;
 });
 
-app.MapGet("/WaterTemperatureProbe/Signal/{locationId}/{minutes?}", async(string locationId,
+app.MapGet("/WaterTemperatureProbe/Signal/{locationId}/{minutes?}", async (string locationId,
     ILoggerFactory loggerFactory, IWaterTemperatureService waterTemperatureService, int? minutes) =>
 {
     minutes = minutes ?? 0;
@@ -118,5 +139,24 @@ app.MapGet("/WaterTemperatureProbe/Signal/{locationId}/{minutes?}", async(string
     parameter.Description = "The location Id of the probe to return status for";
     return generatedOperation;
 });
+
+
+//yes its a GET request for ingesting information....its the Wunderground standard that the device writing to this endpoint uses
+app.MapGet("/Wunderground/Ingest", async (string PASSWORD, string ID,
+    ILoggerFactory loggerFactory) =>
+{
+
+    var correlationId = Guid.NewGuid().ToString();
+    var logger = loggerFactory.CreateLogger("Wunderground-Ingest");
+
+})
+.WithName("WundergroundIngest")
+.RequireAuthorization("LakeFrontApi-Write");
+//.WithOpenApi(generatedOperation =>
+//{
+//    var parameter = generatedOperation.Parameters[0];
+//    parameter.Description = "The location Id of the probe to return status for";
+//    return generatedOperation;
+//});
 
 app.Run();

@@ -12,9 +12,9 @@ namespace LakeStatsApi.Services.WaterTemperature
         private ILogger _logger;
         private IInfluxDBService _influxDBService;
 
-        public WaterTemperatureService(ILoggerFactory loggerFactory, IInfluxDBService influxDBService)
+        public WaterTemperatureService(ILogger<WaterTemperatureService> logger, IInfluxDBService influxDBService)
         {
-            _logger = loggerFactory.CreateLogger<WaterTemperatureService>();
+            _logger = logger;
             _influxDBService = influxDBService;
         }
 
