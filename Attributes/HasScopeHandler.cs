@@ -1,6 +1,7 @@
 ﻿using Keycloak.Client;
 using Keycloak.Client.Models;
 using Microsoft.AspNetCore.Authorization;
+using System.Net.WebSockets;
 
 namespace LakeStatsApi.Attributes
 {
@@ -24,25 +25,36 @@ namespace LakeStatsApi.Attributes
             if (token?.AccessToken == null)
             {
                 context.Fail();
+                return;
             }
 
             if (token?.AccessToken != null)
             {
-                if (token.Scope.ToLower() == requirement.Scope.ToLower())
+                var tokenScopes = token.Scope.Split(" ");
+
+                if (requirement.Scopes.Any(x => tokenScopes.Contains(x)))
+                {
                     context.Succeed(requirement);
+                    return;
+                }
                 else
+                {
                     context.Fail();
+                    return;
+                }
             }
+            context.Fail();
+            return;
         }
 
         internal async Task<Token> GetToken()
         {
             var token = new Token(); 
             var httpContext = _httpContextAccessor.HttpContext;
-            var routeData = httpContext.GetRouteData();
+            var query = httpContext.Request.Query;
 
-            var clientSecret = routeData?.Values["PASSWORD"]?.ToString();
-            var clientId = routeData?.Values["ID"]?.ToString();
+            string clientSecret= query["PASSWORD"];
+            string clientId =  query["ID"];
 
             token = await _keycloakClient.GetToken(clientId, clientSecret);
 

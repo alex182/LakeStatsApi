@@ -14,6 +14,7 @@ using Keycloak.Client.Models;
 using Keycloak.Client;
 using LakeStatsApi.Attributes;
 using Microsoft.AspNetCore.Authorization;
+using RestSharp.Authenticators;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -21,6 +22,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddHttpClient();
 builder.Services.AddHttpContextAccessor();
+
 
 var influxDbOptions = new InfluxServiceOptions()
 {
@@ -67,12 +69,15 @@ builder.Services.AddSingleton<IKeycloakClient,KeycloakClient>();
 builder.Services.AddTransient<IInfluxDBService, InfluxDBService>(); 
 builder.Services.AddTransient<IWaterTemperatureService, WaterTemperatureService>();
 
+builder.Services.AddAuthentication().AddJwtBearer();
+
 builder.Services.AddAuthorization(o =>
 {
-    o.AddPolicy("LakeFrontApi-Write", p => p.AddRequirements(new HasScopeRequirement("lakefrontapi-write")));
+    o.AddPolicy("LakeFrontApi-Write", p => p.AddRequirements(new HasScopeRequirement(new List<string>() { "lakefrontapi-write" })));
 });
 
 builder.Services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
+
 
 var app = builder.Build();
 

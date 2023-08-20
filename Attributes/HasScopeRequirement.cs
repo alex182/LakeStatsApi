@@ -4,7 +4,7 @@ namespace LakeStatsApi.Attributes
 {
     public class HasScopeRequirement : IAuthorizationRequirement
     {
-        public HasScopeRequirement(string scope) => Scope = scope;
-        public string Scope { get; set; }
+        public HasScopeRequirement(List<string> scope) => Scopes = scope;
+        public List<string> Scopes { get; set; }
     }
 }
