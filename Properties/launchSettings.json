@@ -30,6 +30,7 @@
       "commandName": "Docker",
       "launchBrowser": true,
       "launchUrl": "{Scheme}://{ServiceHost}:{ServicePort}/swagger",
+      "environmentVariables": { "InfluxKey": "test" },
       "publishAllPorts": true,
       "useSSL": false
     }

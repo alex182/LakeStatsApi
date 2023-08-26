@@ -142,7 +142,8 @@ app.MapGet("/WaterTemperatureProbe/Signal/{locationId}/{minutes?}", async (strin
 
 
 //yes its a GET request for ingesting information....its the Wunderground standard that the device writing to this endpoint uses
-app.MapGet("/Wunderground/Ingest", async (string PASSWORD, string ID,
+app.MapGet("/Wunderground/Ingest", async (string PASSWORD, string ID,double tempf,int humidity,double dewptf,double windchillf, 
+    int winddir, double windspeedmph, double windgustmph, double rainin, double dailyrainin,
     ILoggerFactory loggerFactory) =>
 {
 
