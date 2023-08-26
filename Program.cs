@@ -15,6 +15,8 @@ using Keycloak.Client;
 using LakeStatsApi.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using RestSharp.Authenticators;
+using LakeStatsApi.Services.Wunderground.Models;
+using LakeStatsApi.Services.Wunderground;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,7 +29,9 @@ builder.Services.AddHttpContextAccessor();
 var influxDbOptions = new InfluxServiceOptions()
 {
     Token = Environment.GetEnvironmentVariable("InfluxKey"),
-    Url = builder.Configuration.GetValue(typeof(string),"InfluxDb:Url").ToString()
+    Url = builder.Configuration.GetValue(typeof(string), "InfluxDb:Url").ToString(),
+    Organization = "7ee4d7f6e9f7c11e",
+    BucketName = "weatherStation"
 };
 
 var keylcoakClientOptions = new KeycloakOptions();
@@ -63,11 +67,12 @@ if (useLokiLogging == "True")
 
 var influxDbClient = InfluxDBClientFactory.Create(influxDbOptions.Url, influxDbOptions.Token);
 
-builder.Services.AddSingleton<InfluxDBClient>(p => influxDbClient); 
+builder.Services.AddSingleton<IInfluxDBClient>(p => influxDbClient); 
+builder.Services.AddSingleton<InfluxServiceOptions>(p => influxDbOptions); 
 builder.Services.AddSingleton<KeycloakOptions>(p => keylcoakClientOptions); 
 builder.Services.AddSingleton<IKeycloakClient,KeycloakClient>(); 
-builder.Services.AddTransient<IInfluxDBService, InfluxDBService>(); 
 builder.Services.AddTransient<IWaterTemperatureService, WaterTemperatureService>();
+builder.Services.AddTransient<IWundergroundService, WundergroundService>();
 
 builder.Services.AddAuthentication().AddJwtBearer();
 
@@ -142,12 +147,46 @@ app.MapGet("/WaterTemperatureProbe/Signal/{locationId}/{minutes?}", async (strin
 
 
 //yes its a GET request for ingesting information....its the Wunderground standard that the device writing to this endpoint uses
-app.MapGet("/Wunderground/Ingest", async (string PASSWORD, string ID,
-    ILoggerFactory loggerFactory) =>
+app.MapGet("/Wunderground/Ingest", async (string PASSWORD, string ID,double tempf,int humidity,double dewptf,double windchillf, 
+    int winddir, double windspeedmph, double windgustmph, double rainin, double dailyrainin,
+    ILoggerFactory loggerFactory, IWundergroundService wundergroundService) =>
 {
 
     var correlationId = Guid.NewGuid().ToString();
     var logger = loggerFactory.CreateLogger("Wunderground-Ingest");
+    var response = new WundergroundIngestResponse();
+
+    try
+    {
+        using (logger.BeginScope("/Wunderground/Ingest {deviceId} {temp} {humidity} {dewpoint} {windchill} {winddirection} {windspeed} {windgust}" +
+            "{rainytd} {rain} {correlationId}", ID, tempf, humidity, dewptf, windchillf, winddir, windspeedmph, windgustmph, rainin, 
+            dailyrainin, correlationId))
+        {
+            var request = new IngestWundergroundRequest()
+            {
+                CorrelationId = correlationId,
+                StationId = ID,
+                DailyRain = dailyrainin,
+                Dewpoint = dewptf,
+                Humidity = humidity,
+                Temperature = tempf,
+                TotalRain = humidity,
+                WindChill = windchillf,
+                WindDirection = winddir,
+                WindGust = windgustmph,
+                WindSpeed = windspeedmph
+            };
+
+            response = await wundergroundService.IngestWunderground(request);
+        };
+    }
+    catch(Exception ex)
+    {
+        response.Message = "An error ocurred";
+        response.StatusCode = System.Net.HttpStatusCode.InternalServerError;
+    }
+
+    return response;
 
 })
 .WithName("WundergroundIngest")
