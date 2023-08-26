@@ -3,22 +3,22 @@ using Keycloak.Client.Models;
 using Microsoft.AspNetCore.Authorization;
 using System.Net.WebSockets;
 
-namespace LakeStatsApi.Attributes
+namespace LakeStatsApi.Auth
 {
-    public class HasScopeHandler : AuthorizationHandler<HasScopeRequirement>
+    public class HasScopeAWHandler : AuthorizationHandler<HasScopeAWRequirement>
     {
         private readonly ILogger _logger;
         private readonly IKeycloakClient _keycloakClient;
         private IHttpContextAccessor _httpContextAccessor = null;
 
-        public HasScopeHandler(ILogger<HasScopeHandler> logger, IKeycloakClient keycloakClient, IHttpContextAccessor httpContextAccessor)
+        public HasScopeAWHandler(ILogger<HasScopeAWHandler> logger, IKeycloakClient keycloakClient, IHttpContextAccessor httpContextAccessor)
         {
             _logger = logger;
             _keycloakClient= keycloakClient;
             _httpContextAccessor = httpContextAccessor;
         }
 
-        protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, HasScopeRequirement requirement)
+        protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, HasScopeAWRequirement requirement)
         {
             var token = await GetToken();
 

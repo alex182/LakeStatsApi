@@ -1,7 +1,4 @@
-using InfluxDB.Client.Api.Domain;
 using LakeStatsApi.Services.Influx.Models;
-using Microsoft.AspNetCore.OpenApi;
-using Serilog.Core;
 using Serilog;
 using System.Reflection;
 using System.Net.NetworkInformation;
@@ -12,9 +9,8 @@ using LakeStatsApi.Services.Influx;
 using LakeStatsApi.Services.WaterTemperature.Models;
 using Keycloak.Client.Models;
 using Keycloak.Client;
-using LakeStatsApi.Attributes;
 using Microsoft.AspNetCore.Authorization;
-using RestSharp.Authenticators;
+using LakeStatsApi.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -73,10 +69,10 @@ builder.Services.AddAuthentication().AddJwtBearer();
 
 builder.Services.AddAuthorization(o =>
 {
-    o.AddPolicy("LakeFrontApi-Write", p => p.AddRequirements(new HasScopeRequirement(new List<string>() { "lakefrontapi-write" })));
+    o.AddPolicy("LakeFrontApi-Write", p => p.AddRequirements(new HasScopeAWRequirement(new List<string>() { "lakefrontapi-write" })));
 });
 
-builder.Services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, HasScopeAWHandler>();
 
 
 var app = builder.Build();
