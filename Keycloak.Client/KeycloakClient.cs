@@ -1,6 +1,8 @@
 ﻿using Keycloak.Client.Models;
+using Keycloak.Models;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Net.Http;
 using System.Text;
@@ -45,6 +47,34 @@ namespace Keycloak.Client
             }
 
             return token;
+        }
+
+        public async Task<TokenIntrospectResult> ValidateJwt(string jwt)
+        {
+            var result = new TokenIntrospectResult();
+
+            var requestUri = $"{_keycloakOptions.BaseUrl}/auth/realms/{_keycloakOptions.Realm}/protocol/openid-connect/token/introspect";
+
+            _logger.LogInformation($"{nameof(KeycloakClient)} {nameof(ValidateJwt)} {jwt} {requestUri}");
+
+            var tokenRequest = new Dictionary<string, string>()
+            {
+                { "client_id", _keycloakOptions.AdminId },
+                {"client_secret", _keycloakOptions.AdminSecret },
+                { "token",jwt }
+            };
+
+            var request = new HttpRequestMessage(HttpMethod.Post, requestUri) { Content = new FormUrlEncodedContent(tokenRequest) };
+
+            var tokenResponse = await _httpClient.SendAsync(request);
+
+            if (tokenResponse.IsSuccessStatusCode)
+            {
+                var tokenString = await tokenResponse.Content.ReadAsStringAsync();
+                result = JsonConvert.DeserializeObject<TokenIntrospectResult>(tokenString);
+            }
+
+            return result;
         }
 
     }

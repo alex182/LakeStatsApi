@@ -5,20 +5,20 @@ using System.Net.WebSockets;
 
 namespace LakeStatsApi.Auth
 {
-    public class HasScopeAWHandler : AuthorizationHandler<HasScopeAWRequirement>
+    public class HasScopeClientIdClientSecretHandler : AuthorizationHandler<HasScopeClientIdClientSecretRequirement>
     {
         private readonly ILogger _logger;
         private readonly IKeycloakClient _keycloakClient;
         private IHttpContextAccessor _httpContextAccessor = null;
 
-        public HasScopeAWHandler(ILogger<HasScopeAWHandler> logger, IKeycloakClient keycloakClient, IHttpContextAccessor httpContextAccessor)
+        public HasScopeClientIdClientSecretHandler(ILogger<HasScopeClientIdClientSecretHandler> logger, IKeycloakClient keycloakClient, IHttpContextAccessor httpContextAccessor)
         {
             _logger = logger;
             _keycloakClient= keycloakClient;
             _httpContextAccessor = httpContextAccessor;
         }
 
-        protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, HasScopeAWRequirement requirement)
+        protected override async Task HandleRequirementAsync(AuthorizationHandlerContext context, HasScopeClientIdClientSecretRequirement requirement)
         {
             var token = await GetToken();
 
