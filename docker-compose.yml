@@ -6,6 +6,8 @@ services:
         container_name: lake_stats_api
         environment:
             - InfluxKey=
+            - Keycloak-Admin-Id=
+            - Keycloak-Admin-Secret=
         ports:
             - "49166:80"
         restart: unless-stopped

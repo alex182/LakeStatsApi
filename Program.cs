@@ -1,7 +1,4 @@
-using InfluxDB.Client.Api.Domain;
 using LakeStatsApi.Services.Influx.Models;
-using Microsoft.AspNetCore.OpenApi;
-using Serilog.Core;
 using Serilog;
 using System.Reflection;
 using System.Net.NetworkInformation;
@@ -12,11 +9,11 @@ using LakeStatsApi.Services.Influx;
 using LakeStatsApi.Services.WaterTemperature.Models;
 using Keycloak.Client.Models;
 using Keycloak.Client;
-using LakeStatsApi.Attributes;
 using Microsoft.AspNetCore.Authorization;
 using RestSharp.Authenticators;
 using LakeStatsApi.Services.Wunderground.Models;
 using LakeStatsApi.Services.Wunderground;
+using LakeStatsApi.Auth;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -34,7 +31,20 @@ var influxDbOptions = new InfluxServiceOptions()
     BucketName = "weatherStation"
 };
 
-var keylcoakClientOptions = new KeycloakOptions();
+var adminClientId = Environment.GetEnvironmentVariable("Keycloak-Admin-Id");
+var adminClientSecret = Environment.GetEnvironmentVariable("Keycloak-Admin-Secret");
+
+if (string.IsNullOrEmpty(adminClientId))
+    throw new ArgumentNullException(adminClientId);
+
+if (string.IsNullOrEmpty(adminClientSecret))
+    throw new ArgumentNullException(adminClientSecret);
+
+var keylcoakClientOptions = new KeycloakOptions()
+{
+    AdminId = adminClientId,
+    AdminSecret = adminClientSecret
+};
 
 var useLokiLogging = builder.Configuration["UseLokiLogging"];
 
@@ -78,10 +88,12 @@ builder.Services.AddAuthentication().AddJwtBearer();
 
 builder.Services.AddAuthorization(o =>
 {
-    o.AddPolicy("LakeFrontApi-Write", p => p.AddRequirements(new HasScopeRequirement(new List<string>() { "lakefrontapi-write" })));
+    o.AddPolicy("LakeFrontApi-Write", p => p.AddRequirements(new HasScopeClientIdClientSecretRequirement(new List<string>() { "lakefrontapi-write" })));
+    o.AddPolicy("LakeFrontApi-Jwt-Read", p => p.AddRequirements(new HasScopeJwtRequirement(new List<string>() { "lakefrontapi-read" })));
 });
 
-builder.Services.AddSingleton<IAuthorizationHandler, HasScopeHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, HasScopeClientIdClientSecretHandler>();
+builder.Services.AddSingleton<IAuthorizationHandler, HasScopeJwtHandler>();
 
 
 var app = builder.Build();
@@ -110,7 +122,9 @@ app.MapGet("/WaterTemperatureProbe/Readings/{deviceId}/{take?}", async(string de
         return waterTemp;
     };
 
-}).WithOpenApi(generatedOperation =>
+}
+).RequireAuthorization("LakeFrontApi-Jwt-Read")
+.WithOpenApi(generatedOperation =>
 {
     var parameter = generatedOperation.Parameters[0];
     parameter.Description = "The location Id of where to return water temperature for";
@@ -138,7 +152,9 @@ app.MapGet("/WaterTemperatureProbe/Signal/{locationId}/{minutes?}", async (strin
         return probeStatus;
     };
 
-}).WithOpenApi(generatedOperation =>
+})
+.RequireAuthorization("LakeFrontApi-Jwt-Read")
+.WithOpenApi(generatedOperation =>
 {
     var parameter = generatedOperation.Parameters[0];
     parameter.Description = "The location Id of the probe to return status for";
@@ -200,11 +216,5 @@ app.MapGet("/Wunderground/Ingest", async (string PASSWORD, string ID,double temp
 })
 .WithName("WundergroundIngest")
 .RequireAuthorization("LakeFrontApi-Write");
-//.WithOpenApi(generatedOperation =>
-//{
-//    var parameter = generatedOperation.Parameters[0];
-//    parameter.Description = "The location Id of the probe to return status for";
-//    return generatedOperation;
-//});
 
 app.Run();
