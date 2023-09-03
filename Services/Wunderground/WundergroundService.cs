@@ -6,6 +6,8 @@ using InfluxDB.Client;
 using LakeStatsApi.Services.WaterTemperature.Models;
 using System.Globalization;
 using LakeStatsApi.Services.Wunderground.Models.Enums;
+using NodaTime;
+using System;
 
 namespace LakeStatsApi.Services.Wunderground
 {
@@ -121,6 +123,159 @@ namespace LakeStatsApi.Services.Wunderground
             return response;
         }
 
+        public async Task<WundergroundReadingResponse> GetWundergroundReadings(WundergroundReadingRequest request)
+        {
+            _logger.LogInformation("{method} {request} to Influx", request,nameof(GetWundergroundReadings));
+
+            var response = new WundergroundReadingResponse() 
+            {
+                CorrelationId= request.CorrelationId
+            };
+
+            var influxQuery = _influxDBClient.GetQueryApi();
+
+
+            var flux = $"from(bucket: \"weatherStation\")\r\n  |> range(start: 0)\r\n  |> filter(fn: (r) => r[\"_measurement\"] == \"AbsoluteBarom\" " +
+                $"or r[\"_measurement\"] == \"BatteryLow\" or r[\"_measurement\"] == \"DailyRain\" or r[\"_measurement\"] == \"Dewpoint\" " +
+                $"or r[\"_measurement\"] == \"MonthlyRain\" or \r\n  r[\"_measurement\"] == \"Humidity\" or r[\"_measurement\"] == \"SolarRadiation\" " +
+                $"or r[\"_measurement\"] == \"Pressure\" or r[\"_measurement\"] == \"TotalRain\" or r[\"_measurement\"] == \"Temperature\" " +
+                $"or r[\"_measurement\"] == \"UvIndex\" or \r\n  r[\"_measurement\"] == \"WeatherCondition\" or r[\"_measurement\"] == \"WeatherConditionDirection\" " +
+                $"or r[\"_measurement\"] == \"WindDirection\" or r[\"_measurement\"] == \"WindGust\" or r[\"_measurement\"] == \"WindChill\" " +
+                $"or \r\n  r[\"_measurement\"] == \"WeeklyRain\" or r[\"_measurement\"] == \"YearlyRain\" or r[\"_measurement\"] == \"WindSpeed\")\r\n  " +
+                $"|> filter(fn: (r) => r[\"StationId\"] == \"{request.StationId}\")\r\n  " +
+                $"|> sort(columns:[\"_time\"],desc:true)\r\n  " +
+                $"|> limit(n:{request.Take})\r\n  " +
+                $"|> yield(name: \"last\")";
+
+            var tables = await influxQuery.QueryAsync(flux, "7ee4d7f6e9f7c11e");
+
+            var results = tables.SelectMany(t =>
+               t.Records
+           ).ToList();
+
+            //I probably structured the data wrong in the table...new to influxDB...kludge to get around that
+            var startTimes = results.Select(r => r.GetTime()).ToList().Distinct().ToList();
+
+            foreach(var time in startTimes)
+            {
+               
+                var recordByTime = results.Where(r => r.GetTime() == time).ToList();
+
+                var record = new WundergroundReading() 
+                { 
+                    TimeStamp = time.Value.ToDateTimeUtc()
+                };
+
+                foreach (var rec in recordByTime)
+                {
+                    var fieldName = rec.GetField();
+                    var value = rec.GetValue();
+
+                    if(fieldName == "AbsoluteBarom" && value != null)
+                    {
+                        record.AbsoluteBarom = (double)value;
+                    }
+
+                    if (fieldName == "WindDirection" && value != null)
+                    {
+                        record.WindDirection = (long)value;
+                    }
+
+                    if (fieldName == "WindChill" && value != null)
+                    {
+                        record.WindChill = (double)value;
+                    }
+
+                    if (fieldName == "WindGust" && value != null)
+                    {
+                        record.WindGust = (double)value;
+                    }
+
+                    if (fieldName == "BatteryLow" && value != null)
+                    {
+                        record.BatteryLow = (long)value;
+                    }
+
+                    if (fieldName == "DailyRain" && value != null)
+                    {
+                        record.DailyRain = (double)value;
+                    }
+
+                    if (fieldName == "Dewpoint" && value != null)
+                    {
+                        record.Dewpoint = (double)value;
+                    }
+
+                    if (fieldName == "MonthlyRain" && value != null)
+                    {
+                        record.MonthlyRain = (double)value;
+                    }
+
+                    if (fieldName == "Humidity" && value != null)
+                    {
+                        record.Humidity = (long)value;
+                    }
+
+                    if (fieldName == "SolarRadiation" && value != null)
+                    {
+                        record.SolarRadiation = (double)value;
+                    }
+
+                    if (fieldName == "Pressure" && value != null)
+                    {
+                        record.Pressure = (double)value;
+                    }
+
+                    if (fieldName == "TotalRain" && value != null)
+                    {
+                        record.TotalRain = (double)value;
+                    }
+
+                    if (fieldName == "Temperature" && value != null)
+                    {
+                        record.Temperature = (double)value;
+                    }
+
+                    if (fieldName == "UvIndex" && value != null)
+                    {
+                        record.UvIndex = (long)value;
+                    }
+
+                    if (fieldName == "WeatherCondition" && value != null)
+                    {
+                        record.WeatherCondition = (string)value;
+                    }
+
+                    if (fieldName == "WeatherConditionDirection" && value != null)
+                    {
+                        record.WeatherConditionDirection = (string)value;
+                    }
+
+                    if (fieldName == "WeeklyRain" && value != null)
+                    {
+                        record.WeeklyRain = (double)value;
+                    }
+
+                    if (fieldName == "YearlyRain" && value != null)
+                    {
+                        record.YearlyRain = (double)value;
+                    }
+                   
+                    if (fieldName == "WindSpeed" && value != null)
+                    {
+                        record.WindSpeed = (double)value;
+                    }
+                }
+
+                record.StationId = request.StationId;
+                response.Results.Add(record);
+            }
+
+            _logger.LogInformation("Result {pagedResults}", response);
+
+            return response;
+
+        }
 
         internal async Task<Models.WeatherCondition> GetWeatherConditions(IngestWundergroundRequest request)
         {
