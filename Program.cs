@@ -217,4 +217,34 @@ app.MapGet("/Wunderground/Ingest", async (string PASSWORD, string ID,double temp
 .WithName("WundergroundIngest")
 .RequireAuthorization("LakeFrontApi-Write");
 
+
+app.MapGet("/Wunderground/Reading/{stationdId}/{take?}", async (string stationdId, int? take,
+    ILoggerFactory loggerFactory, IWundergroundService wundergroundService) =>
+{
+
+    take = take ?? 1;
+
+    var correlationId = Guid.NewGuid().ToString();
+    var logger = loggerFactory.CreateLogger("Wunderground-Get");
+    var response = new WundergroundReadingResponse();
+
+    using (logger.BeginScope("/Wunderground/ {deviceId} {take} {correlationId}",stationdId, take, correlationId))
+    {
+        var request = new WundergroundReadingRequest()
+        {
+            StationId = stationdId,
+            Take = take,
+            CorrelationId = correlationId
+        };
+
+        response = await wundergroundService.GetWundergroundReadings(request);
+    };
+
+    return response;
+
+})
+.WithName("WundergroundReading")
+.RequireAuthorization("LakeFrontApi-Jwt-Read");
+
+
 app.Run();
