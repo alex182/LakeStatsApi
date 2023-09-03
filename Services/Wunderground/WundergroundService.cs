@@ -186,6 +186,11 @@ namespace LakeStatsApi.Services.Wunderground
                         record.WindChill = (double)value;
                     }
 
+                    if (fieldName == "WindSpeed" && value != null)
+                    {
+                        record.WindSpeed = (double)value;
+                    }
+
                     if (fieldName == "WindGust" && value != null)
                     {
                         record.WindGust = (double)value;
