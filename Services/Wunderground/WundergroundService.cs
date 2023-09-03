@@ -3,6 +3,8 @@ using InfluxDB.Client.Writes;
 using LakeStatsApi.Services.Influx.Models;
 using LakeStatsApi.Services.Wunderground.Models;
 using InfluxDB.Client;
+using LakeStatsApi.Services.WaterTemperature.Models;
+using System.Globalization;
 
 namespace LakeStatsApi.Services.Wunderground
 {
@@ -22,6 +24,8 @@ namespace LakeStatsApi.Services.Wunderground
         public async Task<WundergroundIngestResponse> IngestWunderground(IngestWundergroundRequest request)
         {
             _logger.LogInformation("Writing action {request} to Influx", request);
+
+            var weatherConditions = await GetWeatherConditions(request);
 
             var response = new WundergroundIngestResponse()
             {
@@ -106,6 +110,141 @@ namespace LakeStatsApi.Services.Wunderground
             await asyncWriter.WritePointsAsync(dataPoints, _influxOptions.BucketName, _influxOptions.Organization);
 
             return response;
+        }
+
+
+        internal async Task<WeatherCondition> GetWeatherConditions(IngestWundergroundRequest request)
+        {
+            var weatherCondition = new WeatherCondition();
+
+            var averagePressures = await GetAveragePressures(request.StationId);
+
+            if(averagePressures.Count != 13)
+            {
+                return weatherCondition;
+            }
+
+            var pressureDifferences = GetPressureDifferences(averagePressures);
+            var pressureDifference = pressureDifferences.Sum() / pressureDifferences.Count();
+            var currentPressure = averagePressures[0];
+
+            if (pressureDifference > 0.75)
+            {
+                weatherCondition.StormsPossible = false;
+                weatherCondition.Direction = Models.Enums.WeatherCondition.Improving;
+                weatherCondition.RateOfChange = Models.Enums.WeatherConditionRateOfChange.Quick;
+            }
+            // Slowly rising, good weather condition, tendency rising
+            else if (pressureDifference > 0.42)
+            {
+                weatherCondition.StormsPossible = false;
+                weatherCondition.Direction = Models.Enums.WeatherCondition.Improving;
+                weatherCondition.RateOfChange = Models.Enums.WeatherConditionRateOfChange.Slow;
+            }
+            // Change in weather condition is possible, tendency rising
+            else if (pressureDifference > 0.25)
+            {
+                weatherCondition.StormsPossible = false;
+                weatherCondition.Direction = Models.Enums.WeatherCondition.Improving;
+                weatherCondition.RateOfChange = Models.Enums.WeatherConditionRateOfChange.None;
+
+                if ((currentPressure >= 1006 && currentPressure <= 1020) || currentPressure < 1006)
+                {
+                    //CopyImage("/home/pi/pressure_info/SunCloud.png", "/var/www/html/Forecast.png");
+                }
+            }
+            // Falling Conditions
+            // Quickly falling, thunderstorm is highly possible
+            else if (pressureDifference < -0.75)
+            {
+                //CopyImage("/home/pi/pressure_info/Storm.png", "/var/www/html/Forecast.png");
+                //CopyImage("/home/pi/pressure_info/Down.png", "/var/www/html/Arrow.png");
+            }
+            // Slowly falling, rainy weather condition, tendency falling
+            else if (pressureDifference < -0.42)
+            {
+                //CopyImage("/home/pi/pressure_info/Rain.png", "/var/www/html/Forecast.png");
+                //CopyImage("/home/pi/pressure_info/DownRight.png", "/var/www/html/Arrow.png");
+            }
+            // Condition change is possible, tendency falling
+            else if (pressureDifference < -0.25)
+            {
+                //CopyImage("/home/pi/pressure_info/DownRight.png", "/var/www/html/Arrow.png");
+                //if ((currentPressure >= 1006 && currentPressure <= 1020) || currentPressure > 1020)
+                //{
+                //    CopyImage("/home/pi/pressure_info/SunCloud.png", "/var/www/html/Forecast.png");
+                //}
+            }
+            // Steady Conditions
+            // Condition is stable, don't change the weather symbol (sun, rain or sun/cloud), just change the arrow
+            else if (pressureDifference <= 0.25 && pressureDifference >= -0.25)
+            {
+                //CopyImage("/home/pi/pressure_info/Right.png", "/var/www/html/Arrow.png");
+            }
+
+            return weatherCondition; 
+        }
+        internal List<double> GetPressureDifferences(List<double> pressureAverages)
+        {
+            var pressureDifferences = new List<double>();
+            var pressuresToUse = pressureAverages.Take(new Range(1, pressureAverages.Count - 1)).ToList();
+
+            foreach (var averagePressure in pressuresToUse)
+            {
+                var pressureIndex = pressuresToUse.IndexOf(averagePressure);
+                var difference = (pressureAverages[0] - averagePressure) / (pressureIndex + .5);
+
+                pressureDifferences.Add(difference);
+            }
+
+            return pressureDifferences;
+        }
+
+        internal async Task<List<double>> GetAveragePressures(string stationId)
+        {
+            var pressures = new List<double>() 
+            {
+                await GetAveragePressureFromDb(-600,stationId),
+                await GetAveragePressureFromDb(-1800, stationId),
+                await GetAveragePressureFromDb(-3600, stationId),
+                await GetAveragePressureFromDb(-5400,stationId),
+                await GetAveragePressureFromDb(-7200, stationId),
+                await GetAveragePressureFromDb(-9000, stationId),
+                await GetAveragePressureFromDb(-10800, stationId),
+                await GetAveragePressureFromDb(-12600, stationId),
+                await GetAveragePressureFromDb(-14400, stationId),
+                await GetAveragePressureFromDb(-16200, stationId),
+                await GetAveragePressureFromDb(-18000, stationId),
+                await GetAveragePressureFromDb(-19800, stationId),
+                await GetAveragePressureFromDb(-21600, stationId)
+            };
+
+            return pressures;
+        }
+
+        internal async Task<double> GetAveragePressureFromDb(int startSeconds,string stationId)
+        {
+            double pressureAverage = 0;
+
+            
+            var influxQuery = _influxDBClient.GetQueryApi();
+
+            var flux = $"from(bucket: \"weatherStation\")\r\n  |> range(start: {startSeconds}, stop: now())\r\n  " +
+                $"|> filter(fn: (r) => r[\"_measurement\"] == \"Pressure\")\r\n  |> filter(fn: (r) => r[\"_field\"] == \"Pressure\")\r\n  " +
+                $"|> filter(fn: (r) => r[\"StationId\"] == \"{stationId}\")\r\n  |> mean()";
+
+            var tables = await influxQuery.QueryAsync(flux, "7ee4d7f6e9f7c11e");
+
+            if (tables.Any())
+            {
+                if (tables[0].Records.Any())
+                {
+                    pressureAverage = (double)tables[0].Records[0].GetValue(); 
+                }
+
+            }
+
+            return pressureAverage; 
         }
     }
 }
