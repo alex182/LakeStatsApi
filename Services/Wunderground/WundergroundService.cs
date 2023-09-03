@@ -5,6 +5,7 @@ using LakeStatsApi.Services.Wunderground.Models;
 using InfluxDB.Client;
 using LakeStatsApi.Services.WaterTemperature.Models;
 using System.Globalization;
+using LakeStatsApi.Services.Wunderground.Models.Enums;
 
 namespace LakeStatsApi.Services.Wunderground
 {
@@ -104,6 +105,14 @@ namespace LakeStatsApi.Services.Wunderground
                 PointData.Measurement("BatteryLow")
                     .Tag("StationId", request.StationId)
                     .Field("BatteryLow", request.BatteryLow)
+                    .Timestamp(request.TimeStamp, WritePrecision.Ns),
+                PointData.Measurement("WeatherCondition")
+                    .Tag("StationId", request.StationId)
+                    .Field("WeatherCondition", weatherConditions.Condition.ToString())
+                    .Timestamp(request.TimeStamp, WritePrecision.Ns),
+                PointData.Measurement("WeatherConditionDirection")
+                    .Tag("StationId", request.StationId)
+                    .Field("WeatherConditionDirection", weatherConditions.Direction.ToString())
                     .Timestamp(request.TimeStamp, WritePrecision.Ns)
             };
 
@@ -113,9 +122,9 @@ namespace LakeStatsApi.Services.Wunderground
         }
 
 
-        internal async Task<WeatherCondition> GetWeatherConditions(IngestWundergroundRequest request)
+        internal async Task<Models.WeatherCondition> GetWeatherConditions(IngestWundergroundRequest request)
         {
-            var weatherCondition = new WeatherCondition();
+            var weatherCondition = new Models.WeatherCondition();
 
             var averagePressures = await GetAveragePressures(request.StationId);
 
@@ -126,61 +135,64 @@ namespace LakeStatsApi.Services.Wunderground
 
             var pressureDifferences = GetPressureDifferences(averagePressures);
             var pressureDifference = pressureDifferences.Sum() / pressureDifferences.Count();
-            var currentPressure = averagePressures[0];
+            var currentPressure = averagePressures[0] * 33.8639;
+
+            Models.Enums.WeatherCondition weatherConditionEnum = Models.Enums.WeatherCondition.SteadyCondition; 
+            ArrowDirection arrowDirection;
 
             if (pressureDifference > 0.75)
             {
-                weatherCondition.StormsPossible = false;
-                weatherCondition.Direction = Models.Enums.WeatherCondition.Improving;
-                weatherCondition.RateOfChange = Models.Enums.WeatherConditionRateOfChange.Quick;
+                weatherConditionEnum = Models.Enums.WeatherCondition.Unstable;
+                arrowDirection = ArrowDirection.Up;
             }
             // Slowly rising, good weather condition, tendency rising
             else if (pressureDifference > 0.42)
             {
-                weatherCondition.StormsPossible = false;
-                weatherCondition.Direction = Models.Enums.WeatherCondition.Improving;
-                weatherCondition.RateOfChange = Models.Enums.WeatherConditionRateOfChange.Slow;
+                weatherConditionEnum = Models.Enums.WeatherCondition.GoodWeatherTendencyRising;
+                arrowDirection = ArrowDirection.UpRight;
             }
             // Change in weather condition is possible, tendency rising
             else if (pressureDifference > 0.25)
             {
-                weatherCondition.StormsPossible = false;
-                weatherCondition.Direction = Models.Enums.WeatherCondition.Improving;
-                weatherCondition.RateOfChange = Models.Enums.WeatherConditionRateOfChange.None;
-
+                weatherConditionEnum = Models.Enums.WeatherCondition.PossibleWeatherChangeTendencyRising;
+                arrowDirection = ArrowDirection.UpRight;
                 if ((currentPressure >= 1006 && currentPressure <= 1020) || currentPressure < 1006)
                 {
-                    //CopyImage("/home/pi/pressure_info/SunCloud.png", "/var/www/html/Forecast.png");
+                    weatherConditionEnum = Models.Enums.WeatherCondition.GoodWeatherTendencyRising;
                 }
             }
             // Falling Conditions
             // Quickly falling, thunderstorm is highly possible
             else if (pressureDifference < -0.75)
             {
-                //CopyImage("/home/pi/pressure_info/Storm.png", "/var/www/html/Forecast.png");
-                //CopyImage("/home/pi/pressure_info/Down.png", "/var/www/html/Arrow.png");
+                weatherConditionEnum = Models.Enums.WeatherCondition.ThunderstormHighlyPossible;
+                arrowDirection = ArrowDirection.Down;
             }
             // Slowly falling, rainy weather condition, tendency falling
             else if (pressureDifference < -0.42)
             {
-                //CopyImage("/home/pi/pressure_info/Rain.png", "/var/www/html/Forecast.png");
-                //CopyImage("/home/pi/pressure_info/DownRight.png", "/var/www/html/Arrow.png");
+                weatherConditionEnum = Models.Enums.WeatherCondition.RainyWeatherTendencyFalling;
+                arrowDirection = ArrowDirection.DownRight;
             }
             // Condition change is possible, tendency falling
             else if (pressureDifference < -0.25)
             {
-                //CopyImage("/home/pi/pressure_info/DownRight.png", "/var/www/html/Arrow.png");
-                //if ((currentPressure >= 1006 && currentPressure <= 1020) || currentPressure > 1020)
-                //{
-                //    CopyImage("/home/pi/pressure_info/SunCloud.png", "/var/www/html/Forecast.png");
-                //}
+                arrowDirection = ArrowDirection.DownRight;
+                if ((currentPressure >= 1006 && currentPressure <= 1020) || currentPressure > 1020)
+                {
+                    weatherConditionEnum = Models.Enums.WeatherCondition.GoodWeatherTendencyRising;
+                }
             }
             // Steady Conditions
-            // Condition is stable, don't change the weather symbol (sun, rain or sun/cloud), just change the arrow
-            else if (pressureDifference <= 0.25 && pressureDifference >= -0.25)
+            // Condition is stable, don't change the weather symbol (sun, rain, or sun/cloud), just change the arrow
+            else
             {
-                //CopyImage("/home/pi/pressure_info/Right.png", "/var/www/html/Arrow.png");
+                weatherConditionEnum = Models.Enums.WeatherCondition.SteadyCondition;
+                arrowDirection = ArrowDirection.Right;
             }
+
+            weatherCondition.Condition = weatherConditionEnum;
+            weatherCondition.Direction = arrowDirection;
 
             return weatherCondition; 
         }

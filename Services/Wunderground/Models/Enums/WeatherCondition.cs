@@ -2,8 +2,12 @@
 {
     public enum WeatherCondition
     {
-        Improving,
-        Worsening, 
-        Steady
+        Unstable,
+        GoodWeatherTendencyRising,
+        PossibleWeatherChangeTendencyRising,
+        ThunderstormHighlyPossible,
+        RainyWeatherTendencyFalling,
+        PossibleWeatherChangeTendencyFalling,
+        SteadyCondition
     }
 }

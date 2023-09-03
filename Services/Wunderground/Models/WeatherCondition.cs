@@ -2,9 +2,7 @@
 {
     public class WeatherCondition
     {
-        public Enums.WeatherCondition Direction { get; set; }
-        public Enums.WeatherConditionRateOfChange RateOfChange { get; set; }
-        public bool StormsPossible { get; set; }
-        public bool Unstable { get; set; }
+        public Enums.ArrowDirection Direction { get; set; }
+        public Enums.WeatherCondition Condition { get; set; }
     }
 }
