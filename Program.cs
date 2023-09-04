@@ -14,6 +14,7 @@ using RestSharp.Authenticators;
 using LakeStatsApi.Services.Wunderground.Models;
 using LakeStatsApi.Services.Wunderground;
 using LakeStatsApi.Auth;
+using Microsoft.AspNetCore.Diagnostics;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -95,11 +96,31 @@ builder.Services.AddAuthorization(o =>
 builder.Services.AddSingleton<IAuthorizationHandler, HasScopeClientIdClientSecretHandler>();
 builder.Services.AddSingleton<IAuthorizationHandler, HasScopeJwtHandler>();
 
-
 var app = builder.Build();
 
 app.UseSwagger();
 app.UseSwaggerUI();
+
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        context.Response.StatusCode = StatusCodes.Status500InternalServerError;
+        context.Response.ContentType = "text/plain";
+
+        var exceptionHandlerPathFeature = context.Features.Get<IExceptionHandlerPathFeature>();
+        var logger = context.RequestServices.GetRequiredService<ILogger<Program>>();
+
+        if (exceptionHandlerPathFeature?.Error != null)
+        {
+            Log.Error($"An unhandled exception occurred: {exceptionHandlerPathFeature.Error}");
+            await context.Response.WriteAsync("An error occurred.");
+        }
+    });
+});
+
+
+
 
 app.MapGet("/WaterTemperatureProbe/Readings/{deviceId}/{take?}", async(string deviceId,
     ILoggerFactory loggerFactory, IWaterTemperatureService waterTemperatureService, int? take) =>
@@ -221,7 +242,6 @@ app.MapGet("/Wunderground/Ingest", async (string PASSWORD, string ID,double temp
 app.MapGet("/Wunderground/Reading/{stationdId}/{take?}", async (string stationdId, int? take,
     ILoggerFactory loggerFactory, IWundergroundService wundergroundService) =>
 {
-
     take = take ?? 1;
 
     var correlationId = Guid.NewGuid().ToString();
